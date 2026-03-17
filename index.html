@@ -65,8 +65,8 @@
         /* --- A4 Print Document Styling --- */
         #order-container {
             display: none;
-            width: 210mm; /* A4 Width */
-            min-height: 297mm; /* A4 Height */
+            width: 210mm;
+            min-height: 297mm;
             padding: 15mm 20mm;
             margin: 20px auto;
             background: white;
@@ -79,16 +79,15 @@
         .header { text-align: center; margin-bottom: 15px; }
         .header img { width: 90px; height: auto; }
         .header h2 { margin: 5px 0; font-size: 20px; text-transform: uppercase; }
-        .office-order-title { text-align: center; font-weight: bold; text-decoration: underline; margin: 20px 0; font-size: 18px; }
+        .office-order-title { text-align: center; font-weight: bold; text-decoration: underline; margin: 15px 0; font-size: 18px; }
         
-        .content { text-align: justify; line-height: 1.5; font-size: 15px; margin-bottom: 30px; }
-        .signature-block { text-align: right; margin-bottom: 30px; }
-        .ref-date { margin-bottom: 20px; }
-        .recipients { margin-bottom: 20px; font-size: 15px; }
-        .copy-to { font-size: 12px; line-height: 1.3; }
+        .content { text-align: justify; line-height: 1.4; font-size: 15px; margin-bottom: 25px; }
+        .signature-block { text-align: right; margin-bottom: 25px; }
+        .ref-date { margin-bottom: 15px; }
+        .recipients { margin-bottom: 15px; font-size: 15px; }
+        .copy-to { font-size: 11.5px; line-height: 1.2; }
         .copy-to ol { padding-left: 20px; margin-top: 5px; }
 
-        /* --- Printing Logic --- */
         @media print {
             @page { size: A4; margin: 0; }
             body { background: none; padding: 0; }
@@ -169,13 +168,18 @@
 
     <div style="display: flex; gap: 10px;">
         <div class="form-group" style="flex: 1;">
-            <label>Effective Date:</label>
-            <input type="date" id="effDate">
+            <label>Effective From Date:</label>
+            <input type="date" id="effDateFrom">
         </div>
         <div class="form-group" style="flex: 1;">
-            <label>Outgoing Person:</label>
-            <input type="text" id="outgoingPerson" placeholder="Name for Copy To list">
+            <label>Effective To Date (Optional):</label>
+            <input type="date" id="effDateTo">
         </div>
+    </div>
+
+    <div class="form-group">
+        <label>Outgoing Person:</label>
+        <input type="text" id="outgoingPerson" placeholder="Name for Copy To list">
     </div>
 
     <button onclick="generate()">Submit & Print (A4)</button>
@@ -193,7 +197,7 @@
     <div class="content">
         As per the provisions of the Statute No.455, the Hon'ble Ag. Vice-Chancellor has appointed 
         <strong id="pName"></strong> as a <strong id="pRole"></strong> of the 
-        <strong id="pDept"></strong> with effect from <span id="pDate"></span> until further orders.
+        <strong id="pDept"></strong> with effect from <span id="pDateDisplay"></span>.
     </div>
 
     <div class="signature-block">
@@ -241,31 +245,43 @@
 </div>
 
 <script>
+    function formatDate(dateStr) {
+        if (!dateStr) return null;
+        const d = new Date(dateStr);
+        return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    }
+
     function generate() {
         const name = document.getElementById('appointeeName').value;
         const dept = document.getElementById('deptName').value;
-        const rawDate = document.getElementById('effDate').value;
+        const fromDateRaw = document.getElementById('effDateFrom').value;
+        const toDateRaw = document.getElementById('effDateTo').value;
         const outgoing = document.getElementById('outgoingPerson').value;
 
-        // Get selected checkboxes
         let selectedRoles = [];
         document.querySelectorAll('.role-check:checked').forEach(cb => selectedRoles.push(cb.value));
         const roleText = selectedRoles.join('/');
 
-        if(!name || selectedRoles.length === 0 || !rawDate) {
-            alert("Please fill in Name, Date, and select at least one Role.");
+        if(!name || selectedRoles.length === 0 || !fromDateRaw) {
+            alert("Please fill in Name, From Date, and select at least one Role.");
             return;
         }
 
-        // Date formatting
-        const d = new Date(rawDate);
-        const formattedDate = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+        const fromDate = formatDate(fromDateRaw);
+        const toDate = formatDate(toDateRaw);
+
+        let dateDisplayText = fromDate;
+        if (toDate) {
+            dateDisplayText += ` to ${toDate}`;
+        } else {
+            dateDisplayText += ` until further orders`;
+        }
 
         // Inject data
         document.getElementById('pName').innerText = name;
         document.getElementById('pRole').innerText = roleText;
         document.getElementById('pDept').innerText = dept;
-        document.getElementById('pDate').innerText = formattedDate;
+        document.getElementById('pDateDisplay').innerText = dateDisplayText;
         
         document.getElementById('rName1').innerText = name;
         document.getElementById('rDept1').innerText = dept;
